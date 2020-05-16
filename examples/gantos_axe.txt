@@ -10,10 +10,10 @@
 
     ~P <- detach (~Q > ~P)
     ~~P <- detach (~Q > ~~P)
-    (~P ^ ~~p) <- join
-    ~(P | ~P) <- demorgan (~P ^ ~~p)
+    (~P | ~~P) <- join
+    ~(P | ~P) <- demorgan (~P | ~~P)
   ]
-  ((P | ~P) > Q) <- contrapositive (~Q > ~(P | ~P))
+  ((P | ~P) > Q) <- contrapositive (~Q > ~(P | ~P)) # a comment!
   (~P > ~P) <- [
     ~P
     ~P
