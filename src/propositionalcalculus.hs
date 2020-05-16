@@ -1,5 +1,6 @@
 import Control.Monad (foldM)
 import Data.Char (isUpper)
+import System.Environment (getArgs)
 
 
 data Statement
@@ -337,4 +338,8 @@ run name = do
     Right _ ->
       putStrLn "valid"
 
-main = run "examples/gantos_axe.txt"
+main = do
+  args <- getArgs
+  case args of
+    [filename] -> run filename
+    _ -> putStrLn "usage: propositionalcalculus <examples/example.txt>"
