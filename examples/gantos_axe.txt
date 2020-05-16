@@ -1,0 +1,23 @@
+(((P > Q) & (~P > Q)) > Q) <- [
+  ((P > Q) & (~P > Q))
+
+  (P > Q) <- separate ((P > Q) & (~P > Q))
+  (~Q > ~P) <- contrapositive (P > Q)
+  (~P > Q) <- separate ((P > Q) & (~P > Q))
+  (~Q > ~~P) <- contrapositive (~P > Q)
+  (~Q > ~(P | ~P)) <- [
+    ~Q
+
+    ~P <- detach (~Q > ~P)
+    ~~P <- detach (~Q > ~~P)
+    (~P ^ ~~p) <- join
+    ~(P | ~P) <- demorgan (~P ^ ~~p)
+  ]
+  ((P | ~P) > Q) <- contrapositive (~Q > ~(P | ~P))
+  (~P > ~P) <- [
+    ~P
+    ~P
+  ]
+  (P | ~P) <- switch (~P > ~P)
+  Q <- detach ((P | ~P) > Q)
+]

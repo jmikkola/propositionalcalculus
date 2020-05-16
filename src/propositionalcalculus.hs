@@ -8,6 +8,22 @@ data Statement
   | Implies Statement Statement
   deriving (Eq, Show)
 
+data Derrivation
+  = Derrivation [(Statement, Rule)]
+  deriving (Show)
+
+data Rule
+  = Given -- raw statement that was previously proven
+  | Join -- the two joined statements are implied in the derrived statement
+  | Separate Statement
+  | DoubleNegation Statement
+  | Assumption Statement Derrivation
+  | Detachment Statement -- the other statement is implied
+  | Contrapositive Statement -- forward or backwards
+  | Demorgan Statement
+  | Switch Statement
+  deriving (Show)
+
 prettyPrint :: Statement -> String
 prettyPrint stmt = case stmt of
   Atom    a   -> [a]
@@ -16,14 +32,19 @@ prettyPrint stmt = case stmt of
   Or      a b -> "(" ++ prettyPrint a ++ " | " ++ prettyPrint b ++ ")"
   Implies a b -> "(" ++ prettyPrint a ++ " > " ++ prettyPrint b ++ ")"
 
-parse :: String -> Either String Statement
-parse s = do
+type Result a = Either String a
+
+parseStatement :: String -> Result Statement
+parseStatement s = do
   (stmt, rest) <- parseNext s
   if rest /= ""
     then Left $ "left over after statement: " ++ rest
     else return stmt
 
-parseNext :: String -> Either String (Statement, String)
+parseDerrivation :: String -> Result Derrivation
+parseDerrivation = undefined
+
+parseNext :: String -> Result (Statement, String)
 parseNext "" = Left "empty statement"
 parseNext (c:cs) = case c of
   ' ' -> parseNext cs
@@ -41,7 +62,7 @@ parseNext (c:cs) = case c of
   _ ->
     Left $ "Invalid expression starting at " ++ (c:cs)
 
-parseOp :: String -> Either String (Statement -> Statement -> Statement, String)
+parseOp :: String -> Result (Statement -> Statement -> Statement, String)
 parseOp "" = Left "expected an operation, found EOF"
 parseOp (c:cs) = case c of
   ' ' -> parseOp cs
@@ -50,7 +71,7 @@ parseOp (c:cs) = case c of
   '>' -> return (Implies, cs)
   _   -> Left $ "Expected an operation, found " ++ (c:cs)
 
-requireNext :: Char -> String -> Either String String
+requireNext :: Char -> String -> Result String
 requireNext c "" = Left $ "required " ++ [c] ++ " but found EOF"
 requireNext c (x:xs) =
   if c == x
