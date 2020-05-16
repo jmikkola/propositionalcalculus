@@ -7,3 +7,5 @@ TAGS
 *.o
 .cabal-sandbox
 dist
+.stack-work
+stack.yaml.lock
