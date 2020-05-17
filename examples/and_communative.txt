@@ -1,0 +1,7 @@
+((A & B) > (B & A)) <- [
+    (A & B)
+
+    A <- separate (A & B)
+    B <- separate (A & B)
+    (B & A) <- join
+]

@@ -1,0 +1,14 @@
+((A | B) > (B | A)) <- [
+    (A | B)
+
+    (~A > B) <- [
+          ~A
+
+          (~A > B) <- switch (A | B)
+          B <- detach (~A > B)
+    ]
+
+    (~B > ~~A) <- contrapositive (~A > B)
+    (~B > A) <- doublenegation (~B > ~~A)
+    (B | A) <- switch (~B > A)
+]
