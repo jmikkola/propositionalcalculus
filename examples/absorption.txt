@@ -1,3 +1,4 @@
+# oops, this actually a slightly different statement
 ((P > Q) > (P > (P | Q))) <- [
     (P > Q)
 

@@ -1,0 +1,18 @@
+(((A | X) & (A | Y)) > (A | (X & Y))) <- [
+     ((A | X) & (A | Y))
+
+     (A | X) <- separate ((A | X) & (A | Y))
+     (A | Y) <- separate ((A | X) & (A | Y))
+
+     (~A > (X & Y)) <- [
+         ~A
+
+         (~A > X) <- switch (A | X)
+         (~A > Y) <- switch (A | Y)
+         X <- detach (~A > X)
+         Y <- detach (~A > Y)
+         (X & Y) <- join
+     ]
+
+     (A | (X & Y)) <- switch (~A > (X & Y))
+]

@@ -1,0 +1,5 @@
+(P > P) <- [
+   P
+]
+(~~P > P) <- doublenegation (P > P)
+(~P | P) <- switch (~~P > P)

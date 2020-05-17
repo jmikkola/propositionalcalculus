@@ -1,0 +1,26 @@
+((P > Q) > (P > (P & Q))) <- [
+    (P > Q)
+
+    (~~P > Q) <- doublenegation (P > Q)
+    (~P | Q) <- switch (~~P > Q)
+
+    # Excluded middle
+    (P > P) <- [
+       P
+    ]
+    (~~P > P) <- doublenegation (P > P)
+    (~P | P) <- switch (~~P > P)
+
+
+    (P > (P & Q)) <- [
+         P
+
+         (~~P > P) <- switch (~P | P)
+         (~~P > Q) <- switch (~P | Q)
+         (P > P) <- doublenegation (~~P > P)
+         (P > Q) <- doublenegation (~~P > Q)
+         P <- detach (P > P)
+         Q <- detach (P > Q)
+         (P & Q) <- join
+    ]
+]
