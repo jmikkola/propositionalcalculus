@@ -74,6 +74,7 @@ checkStep proven (newStatement, rule) = case rule of
            ", but goal was " ++ prettyPrint newStatement
 
   Detachment stmt -> do
+    requireProven proven stmt
     assumedStatements <- findDetachments stmt newStatement
     mapM_ (requireProven proven) assumedStatements
     return (newStatement : proven)
