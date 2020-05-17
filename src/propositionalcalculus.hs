@@ -40,7 +40,7 @@ checkStep :: Proven -> Step -> Result Proven
 checkStep proven (newStatement, rule) = case rule of
   Given -> do
     requireProven proven newStatement
-    return proven
+    return (newStatement : proven)
 
   Join -> case newStatement of
     (And a b) -> do
