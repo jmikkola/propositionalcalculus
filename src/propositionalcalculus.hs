@@ -92,8 +92,7 @@ checkStep proven (newStatement, rule) = case rule of
 
   Demorgan stmt -> do
     requireProven proven stmt
-    edited <- applyDemorgan stmt
-    if newStatement == edited
+    if isDemorganOf newStatement stmt
       then return (newStatement : proven)
       else Left $ "cannot derrive " ++ prettyPrint newStatement ++ " from " ++
            prettyPrint stmt ++ " with De Morgan's law"
@@ -106,46 +105,49 @@ checkStep proven (newStatement, rule) = case rule of
            prettyPrint stmt ++ " with a switch"
 
 impliedByDoubleNegation :: Statement -> Statement -> Bool
-impliedByDoubleNegation s1 s2
-  | s1 == s2 = True
-  | otherwise = case (s1, s2) of
-      (a, Not (Not b)) -> impliedByDoubleNegation a b
-      (Not (Not a), b) -> impliedByDoubleNegation a b
-      (Not a, Not b) -> impliedByDoubleNegation a b
-      (And a1 a2, And b1 b2) ->
-        impliedByDoubleNegation a1 b1 && impliedByDoubleNegation a2 b2
-      (Or a1 a2, Or b1 b2) ->
-        impliedByDoubleNegation a1 b1 && impliedByDoubleNegation a2 b2
-      (Implies a1 a2, Implies b1 b2) ->
-        impliedByDoubleNegation a1 b1 && impliedByDoubleNegation a2 b2
-      _ ->
-        False
+impliedByDoubleNegation = equalOrEquivalent test
+  where test a             (Not (Not b)) = a == b
+        test (Not (Not a)) b             = a == b
+        test _             _             = False
 
 isContraOf :: Statement -> Statement -> Bool
-isContraOf (Implies x y) (Implies notY notX) =
-  (Not x) == notX && (Not y) == notY
-isContraOf _ _ = False
+isContraOf = equalOrEquivalent test
+  where test (Implies x y) (Implies notY notX) =
+          (Not x) == notX && (Not y) == notY
+        test _             _                   =
+          False
 
-applyDemorgan :: Statement -> Result Statement
-applyDemorgan (And (Not x) (Not y)) =
-  return (Not (Or x y))
-applyDemorgan (Not (Or x y)) =
-  return (And (Not x) (Not y))
-applyDemorgan stmt =
-  Left $ "cannot apply De Morgan's law to " ++ prettyPrint stmt
+isDemorganOf :: Statement -> Statement -> Bool
+isDemorganOf = equalOrEquivalent test
+  where test (And (Not x1) (Not y1)) (Not (Or x2 y2))        =
+          x1 == x2 && y1 == y2
+        test (Not (Or x1 y1))        (And (Not x2) (Not y2)) =
+          x1 == x2 && y1 == y2
+        test _                       _                       =
+          False
 
 isSwitchOf :: Statement -> Statement -> Bool
-isSwitchOf (Or x1 y1) (Implies (Not x2) y2) =
-  x1 == x2 && y1 == y2
-isSwitchOf a b =
-  if a == b
-  then True
-  else case (a, b) of
-    (Not a1, Not b1) -> isSwitchOf a1 b1
-    (And a1 a2, And b1 b2) -> isSwitchOf a1 b1 && isSwitchOf a2 b2
-    (Or a1 a2, Or b1 b2) -> isSwitchOf a1 b1 && isSwitchOf a2 b2
-    (Implies a1 a2, Implies b1 b2) -> isSwitchOf a1 b1 && isSwitchOf a2 b2
-    _ -> False
+isSwitchOf = equalOrEquivalent test
+  where test (Or x1 y1) (Implies (Not x2) y2) =
+          x1 == x2 && y1 == y2
+        test _          _                     =
+          False
+
+equalOrEquivalent :: (Statement -> Statement -> Bool) -> Statement -> Statement -> Bool
+equalOrEquivalent test a b
+  | a == b    = True
+  | test a b  = True
+  | otherwise = case (a, b) of
+      (Not a1, Not b1) ->
+        equalOrEquivalent test a1 b1
+      (And a1 a2, And b1 b2) ->
+        equalOrEquivalent test a1 b1 && equalOrEquivalent test a2 b2
+      (Or a1 a2, Or b1 b2) ->
+        equalOrEquivalent test a1 b1 && equalOrEquivalent test a2 b2
+      (Implies a1 a2, Implies b1 b2) ->
+        equalOrEquivalent test a1 b1 && equalOrEquivalent test a2 b2
+      _ ->
+        False
 
 requireProven :: Proven -> Statement -> Result ()
 requireProven proven stmt =
