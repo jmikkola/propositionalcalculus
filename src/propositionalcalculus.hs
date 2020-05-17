@@ -73,16 +73,10 @@ checkStep proven (newStatement, rule) = case rule of
       else Left $ "Assumption proved " ++ prettyPrint newTheorem ++
            ", but goal was " ++ prettyPrint newStatement
 
-  Detachment stmt -> case stmt of
-    (Implies a b) -> do
-      requireProven proven stmt
-      requireProven proven a
-      if b == newStatement
-        then return (b : proven)
-        else Left $ "implication proves " ++ prettyPrint b ++
-             ", but goal is " ++ prettyPrint newStatement
-    _ ->
-      Left $ "detachment requires an implication, got " ++ prettyPrint stmt
+  Detachment stmt -> do
+    assumedStatements <- findDetachments stmt newStatement
+    mapM_ (requireProven proven) assumedStatements
+    return (newStatement : proven)
 
   Contrapositive stmt -> do
     requireProven proven stmt
@@ -103,6 +97,34 @@ checkStep proven (newStatement, rule) = case rule of
       then return (newStatement : proven)
       else Left  $ "cannot derrive " ++ prettyPrint newStatement ++ " from " ++
            prettyPrint stmt ++ " with a switch"
+
+findDetachments :: Statement -> Statement -> Result [Statement]
+findDetachments proven goal
+  | proven == goal                        = return []
+  | Just stmt <- isDetachment proven goal = return [stmt]
+  | otherwise                             = case (proven, goal) of
+      (Not a1, Not b1) ->
+        findDetachments a1 b1
+      (And a1 a2, And b1 b2) -> do
+        stmts1 <- findDetachments a1 b1
+        stmts2 <- findDetachments a2 b2
+        return $ stmts1 ++ stmts2
+      (Or a1 a2, Or b1 b2) -> do
+        stmts1 <- findDetachments a1 b1
+        stmts2 <- findDetachments a2 b2
+        return $ stmts1 ++ stmts2
+      (Implies a1 a2, Implies b1 b2) -> do
+        stmts1 <- findDetachments a1 b1
+        stmts2 <- findDetachments a2 b2
+        return $ stmts1 ++ stmts2
+      _ ->
+        Left $ prettyPrint goal ++ " is not a detachment of " ++ prettyPrint proven
+
+isDetachment :: Statement -> Statement -> Maybe Statement
+isDetachment (Implies a b) goal =
+  if b == goal then Just a else Nothing
+isDetachment _ _ =
+  Nothing
 
 impliedByDoubleNegation :: Statement -> Statement -> Bool
 impliedByDoubleNegation = equalOrEquivalent test

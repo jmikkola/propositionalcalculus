@@ -1,0 +1,11 @@
+(((A & B) & C) > (A & (B & C))) <- [
+     ((A & B) & C)
+
+     (A & B) <- separate ((A & B) & C)
+     A <- separate (A & B)
+     B <- separate (A & B)
+     C <- separate ((A & B) & C)
+
+     (B & C) <- join
+     (A & (B & C)) <- join
+]
