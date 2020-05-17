@@ -137,8 +137,15 @@ applyDemorgan stmt =
 isSwitchOf :: Statement -> Statement -> Bool
 isSwitchOf (Or x1 y1) (Implies (Not x2) y2) =
   x1 == x2 && y1 == y2
-isSwitchOf _ _ =
-  False
+isSwitchOf a b =
+  if a == b
+  then True
+  else case (a, b) of
+    (Not a1, Not b1) -> isSwitchOf a1 b1
+    (And a1 a2, And b1 b2) -> isSwitchOf a1 b1 && isSwitchOf a2 b2
+    (Or a1 a2, Or b1 b2) -> isSwitchOf a1 b1 && isSwitchOf a2 b2
+    (Implies a1 a2, Implies b1 b2) -> isSwitchOf a1 b1 && isSwitchOf a2 b2
+    _ -> False
 
 requireProven :: Proven -> Statement -> Result ()
 requireProven proven stmt =
