@@ -1,0 +1,9 @@
+(((P | Q) & ~P) > Q) <- [
+     ((P | Q) & ~P)
+
+     (P | Q) <- separate ((P | Q) & ~P)
+     ~P <- separate ((P | Q) & ~P)
+
+     (~P > Q) <- switch (P | Q)
+     Q <- detach (~P > Q)
+]
